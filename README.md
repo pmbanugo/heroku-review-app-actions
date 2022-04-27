@@ -2,7 +2,9 @@
 
 This GitHub action manages Heroku review apps for your software delivery pipeline. This was born out of the frustration of not being able to use review apps for a long time and there's no timeline when Heroku will have this sorted. See [status.heroku.com/incidents/2413](https://status.heroku.com/incidents/2413) for more info.
 
-This mimics 💯 how review apps work with the native Heroku integration. Compared to other exisitng solutions created by the community in the last few days, this action is:
+This mimics 💯 how review apps work with the native Heroku integration.
+
+### Features
 
 - ⚙️ Focuses on automated preview deploy. You get the same automated preview deploy experience for your PRs.
 - 🏎 Fast . No need to upload all your git info/metadata or history to Heroku.(coming soon - configure which files to omit from source code upload).
@@ -10,7 +12,9 @@ This mimics 💯 how review apps work with the native Heroku integration. Compar
 
 ## How To Use
 
-Here's an example workflow that uses this action:
+Here's an example workflow that uses this action. This example workflow runs when you open (reopen), close, or push a new commit to your PR branch.
+
+This action delete review apps when the associating PR is closed.
 
 ```yaml
 on:
