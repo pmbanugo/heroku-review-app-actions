@@ -51,8 +51,8 @@ runs:
         curl -X POST https://api.heroku.com/apps \
         -d '{
         "name": "'"$APP_NAME"'",
-        "region": "eu",
-        "stack": "heroku-20"
+        "region": "${{ inputs.region }}",
+        "stack": "${{ inputs.stack }}"
         }' \
         -H "Content-Type: application/json" \
         -H "Accept: application/vnd.heroku+json; version=3" \
