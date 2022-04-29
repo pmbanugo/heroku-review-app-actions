@@ -84,7 +84,7 @@ runs:
       if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
       shell: bash
       run: |
-        tar -czvf source.tar.gz .
+        GLOBIGNORE=".:.." tar -czvf source.tar.gz *
     - name: Upload Source Code
       if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
       shell: bash
