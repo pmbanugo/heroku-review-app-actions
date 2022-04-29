@@ -94,8 +94,7 @@ runs:
         "source_blob": {"url": "'"$SOURCE_GET_URL"'", "version": "'"${{ github.event.pull_request.head.sha }}"'"},
         "app": {
           "name": "'"$APP_NAME"'",
-          "region": "${{ inputs.region }}",
-          "stack": "${{ inputs.stack }}"
+          "region": "${{ inputs.region }}"
         }
         }' \
         -H "Content-Type: application/json" \
