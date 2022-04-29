@@ -29,15 +29,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Deploy Heroku app
-        uses: pmbanugo/heroku-review-app-actions@v1.2.0-dev # Uses the action
+        uses: pmbanugo/heroku-review-app-actions@v1.2.0 # Uses the action
         id: deploy
         with:
           api-key: ${{ secrets.HEROKU_API_KEY }}
           pipeline-id: ${{ secrets.HEROKU_PIPELINE_ID }}
           app-name-prefix: getting-started
           region: us
-      # Use the output from the `deploy` step
-      - name: Get the review app url
+          use-app-json: true # Use this if your app contains app.json in the root directory
+      - name: Get the review app url # Use the output from the `deploy` step
         run: echo "The URL is ${{ steps.deploy.outputs.url }}"
       - name: Comment on commit # Optional: You can use any action to comment on the PR
         uses: phulsechinmay/rewritable-pr-comment@v0.2.1
@@ -56,7 +56,8 @@ The action expects a few input parameters which are defined below.
 - api-key (required): Your Heroku API key
 - pipeline-id (required): The id of the pipeline to deploy the review app to.
 - region (optional): The region to deploy to. For example `eu` or `us`. Default: `eu`
-- stack (optional): The Heroku stack to deploy and build with e.g heroku-18. Default: `heroku-20`
+- stack (optional): The Heroku stack to deploy and build with e.g heroku-18. Default: `heroku-20`. If the input `use-app-json` is `true`, the stack will be determined by what's in `app.json`, and if not present, the default on Heroku will be used.
+- use-app-json (optional): Set up the initial build using the `app.json` in the root directory. Default: `false`.
 
 ## What's next?
 
