@@ -67,3 +67,7 @@ This action works well with most cases at the moment. If something is broken or 
 ## Sponsor
 
 To better support the maintenance and active development of this projects (as well as others), it'll be helpful if you [sponsor me here on GitHub](https://github.com/sponsors/pmbanugo).
+
+## Contributing
+
+You're welcome to submit PR to fix a bug or propose a feature. When you send a PR, pls point it to the **dev** branch
