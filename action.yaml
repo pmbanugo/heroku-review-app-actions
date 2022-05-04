@@ -20,6 +20,9 @@ inputs:
     description: "Heroku stack to deploy to e.g heroku-18. Default: heroku-20"
     default: "heroku-20"
     required: false
+  team:
+    description: "The Heroku team the app belongs to."
+    required: false
   use-app-json:
     description: "Set up the initial build using app.json. For more info: https://devcenter.heroku.com/articles/setting-up-apps-using-the-heroku-platform-api"
     default: false
@@ -85,7 +88,7 @@ runs:
         -H "Accept: application/vnd.heroku+json; version=3" \
         -H "Authorization: Bearer ${{ inputs.api-key }}"
     - name: "Create App (Setup with app.json)"
-      if: ${{ github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened') && inputs.use-app-json == 'true' }}
+      if: ${{ github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened') && inputs.use-app-json == 'true' && inputs.team == '' }}
       shell: bash
       run: |
         export SOURCE_GET_URL=$(echo ${{ toJSON(steps.source_endpoint.outputs.SOURCE_ENDPOINT) }} | jq -r '.get')
@@ -95,6 +98,23 @@ runs:
         "app": {
           "name": "'"$APP_NAME"'",
           "region": "${{ inputs.region }}"
+        }
+        }' \
+        -H "Content-Type: application/json" \
+        -H "Accept: application/vnd.heroku+json; version=3" \
+        -H "Authorization: Bearer ${{ inputs.api-key }}"
+    - name: "Create Team App (Setup with app.json)"
+      if: ${{ github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened') && inputs.use-app-json == 'true' && inputs.team != '' }}
+      shell: bash
+      run: |
+        export SOURCE_GET_URL=$(echo ${{ toJSON(steps.source_endpoint.outputs.SOURCE_ENDPOINT) }} | jq -r '.get')
+        curl -X POST https://api.heroku.com/app-setups \
+        -d '{
+        "source_blob": {"url": "'"$SOURCE_GET_URL"'", "version": "'"${{ github.event.pull_request.head.sha }}"'"},
+        "app": {
+          "name": "'"$APP_NAME"'",
+          "region": "${{ inputs.region }}",
+          "organization": "${{ inputs.team }}"
         }
         }' \
         -H "Content-Type: application/json" \

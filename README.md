@@ -58,6 +58,7 @@ The action expects a few input parameters which are defined below.
 - region (optional): The region to deploy to. For example `eu` or `us`. Default: `eu`
 - stack (optional): The Heroku stack to deploy and build with e.g heroku-18. Default: `heroku-20`. If the input `use-app-json` is `true`, the stack will be determined by what's in `app.json`, and if not present, the default on Heroku will be used.
 - use-app-json (optional): Set up the initial build using the `app.json` in the root directory. Default: `false`.
+- team (optional): The Heroku team the app belongs to.
 
 ## What's next?
 
