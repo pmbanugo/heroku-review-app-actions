@@ -71,69 +71,16 @@ runs:
       run: |
         export URL=$(echo ${{ toJSON(steps.source_endpoint.outputs.SOURCE_ENDPOINT) }} | jq -r '.put')
         curl $URL -X PUT -H 'Content-Type:' --data-binary @source.tar.gz
-    - name: Create App
-      if: ${{ github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened') && inputs.use-app-json == 'false' }}
-      shell: bash
-      run: |
-        curl -X POST https://api.heroku.com/apps \
-        -d '{
-        "name": "'"$APP_NAME"'",
-        "region": "${{ inputs.region }}",
-        "stack": "${{ inputs.stack }}"
-        }' \
-        -H "Content-Type: application/json" \
-        -H "Accept: application/vnd.heroku+json; version=3" \
-        -H "Authorization: Bearer ${{ inputs.api-key }}"
-    - name: "Create App (Setup with app.json)"
-      if: ${{ github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened') && inputs.use-app-json == 'true' }}
+    - name: Create Review App
       shell: bash
       run: |
         export SOURCE_GET_URL=$(echo ${{ toJSON(steps.source_endpoint.outputs.SOURCE_ENDPOINT) }} | jq -r '.get')
-        curl -X POST https://api.heroku.com/app-setups \
-        -d '{
-        "source_blob": {"url": "'"$SOURCE_GET_URL"'", "version": "'"${{ github.event.pull_request.head.sha }}"'"},
-        "app": {
-          "name": "'"$APP_NAME"'",
-          "region": "${{ inputs.region }}"
-        }
-        }' \
-        -H "Content-Type: application/json" \
-        -H "Accept: application/vnd.heroku+json; version=3" \
-        -H "Authorization: Bearer ${{ inputs.api-key }}"
-    - name: Update Pipeline
-      if: ${{ github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened') }}
-      shell: bash
-      run: |
-        curl -X POST https://api.heroku.com/pipeline-couplings \
+        curl -n -X POST https://api.heroku.com/review-apps \
           -d '{
-          "app": "'"$APP_NAME"'",
-          "pipeline": "'"${{ inputs.pipeline-id }}"'",
-          "stage": "review"
-        }' \
-        -H "Content-Type: application/json" \
-        -H "Accept: application/vnd.heroku+json; version=3" \
-        -H "Authorization: Bearer ${{ inputs.api-key }}"
-    - name: Create Build
-      if: ${{ github.event_name == 'pull_request' && (github.event.action == 'synchronize' || ((github.event.action == 'opened' || github.event.action == 'reopened') && inputs.use-app-json == 'false')) }}
-      shell: bash
-      run: |
-        export SOURCE_GET_URL=$(echo ${{ toJSON(steps.source_endpoint.outputs.SOURCE_ENDPOINT) }} | jq -r '.get')
-        export OUTPUT_STREAM_URL=$(curl -X POST https://api.heroku.com/apps/$APP_NAME/builds \
-        -d '{"source_blob":{"url":"'"$SOURCE_GET_URL"'", "version": "'"${{ github.event.pull_request.head.sha }}"'"}}' \
-        -H 'Accept: application/vnd.heroku+json; version=3' \
-        -H "Content-Type: application/json" \
-        -H "Authorization: Bearer ${{ inputs.api-key }}" | \
-        jq -r '.output_stream_url')
-        curl $OUTPUT_STREAM_URL
-    - name: Set Output:url
-      id: output-url
-      shell: bash
-      run: echo "::set-output name=url::$(echo https://$APP_NAME.herokuapp.com)"
-    - name: Delete Review App
-      if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' }}
-      shell: bash
-      run: |
-        curl -X DELETE https://api.heroku.com/apps/$APP_NAME \
-        -H "Content-Type: application/json" \
-        -H "Accept: application/vnd.heroku+json; version=3" \
-        -H "Authorization: Bearer ${{ inputs.api-key }}"
+            "branch": "${{ github.ref_name }}",
+            "pipeline": "${{ inputs.pipeline-id }}",
+            "source_blob": {"url": "'"$SOURCE_GET_URL"'", "version": "'"${{ github.event.pull_request.head.sha }}"'"},
+          }'
+          -H "Content-Type: application/json" \
+          -H "Accept: application/vnd.heroku+json; version=3" \
+          -H "Authorization: Bearer ${{ inputs.api-key }}" | \
