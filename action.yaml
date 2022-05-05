@@ -22,7 +22,7 @@ inputs:
     required: false
   use-app-json:
     description: "Set up the initial build using app.json. For more info: https://devcenter.heroku.com/articles/setting-up-apps-using-the-heroku-platform-api"
-    default: false
+    default: "false"
     required: false
 outputs:
   url:
