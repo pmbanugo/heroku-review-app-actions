@@ -87,6 +87,20 @@ runs:
         -H "Content-Type: application/json" \
         -H "Accept: application/vnd.heroku+json; version=3" \
         -H "Authorization: Bearer ${{ inputs.api-key }}"
+    - name: Create Team App
+      if: ${{ github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened') && inputs.use-app-json == 'false' && inputs.team != ''  }}
+      shell: bash
+      run: |
+        curl -X POST https://api.heroku.com/apps \
+        -d '{
+        "name": "'"$APP_NAME"'",
+        "region": "${{ inputs.region }}",
+        "stack": "${{ inputs.stack }}",
+        "organization": "${{ inputs.team }}"
+        }' \
+        -H "Content-Type: application/json" \
+        -H "Accept: application/vnd.heroku+json; version=3" \
+        -H "Authorization: Bearer ${{ inputs.api-key }}"
     - name: "Create App (Setup with app.json)"
       if: ${{ github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened') && inputs.use-app-json == 'true' && inputs.team == '' }}
       shell: bash
