@@ -9,6 +9,10 @@ inputs:
   api-key:
     description: "Your Heroku API key"
     required: true
+  files-glob:
+    default: "*"
+    description: "The glob pattern for files to include in the deployment"
+    required: false
   pipeline-id:
     description: "The id of the pipeline to deploy review app for"
     required: true
@@ -65,7 +69,7 @@ runs:
       if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
       shell: bash
       run: |
-        tar -czvf source.tar.gz *
+        tar -czvf source.tar.gz ${{ inputs.files-glob }}
     - name: Upload Source Code
       if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
       shell: bash
