@@ -91,12 +91,12 @@ runs:
       if: ${{ github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened') && inputs.use-app-json == 'false' && inputs.team != ''  }}
       shell: bash
       run: |
-        curl -X POST https://api.heroku.com/apps \
+        curl -X POST https://api.heroku.com/teams/apps \
         -d '{
         "name": "'"$APP_NAME"'",
         "region": "${{ inputs.region }}",
         "stack": "${{ inputs.stack }}",
-        "organization": "${{ inputs.team }}"
+        "team": "${{ inputs.team }}"
         }' \
         -H "Content-Type: application/json" \
         -H "Accept: application/vnd.heroku+json; version=3" \
