@@ -55,10 +55,11 @@ The action expects a few input parameters which are defined below.
 - **app-name-prefix (optional):** Prefix for the app. This is should generally be the name of the pipeline e.g `airtable` prefix will produce `soludo-pr-PR_NUMBER.herokuapp.com`.
 - **api-key (required):** Your Heroku API key
 - **pipeline-id (required):** The id of the pipeline to deploy the review app to.
-- **region (optional):** The region to deploy to. For example `eu` or `us`. Default: `eu`
-- **stack (optional):** The Heroku stack to deploy and build with e.g heroku-18. Default: `heroku-20`. If the input `use-app-json` is `true`, the stack will be determined by what's in `app.json`, and if not present, the default on Heroku will be used.
-- **use-app-json (optional):** Set up the initial build using the `app.json` in the root directory. Default: `false`.
+- **region (optional):** The region to deploy to. For example `eu` or `us`. **Default**: `eu`
+- **stack (optional):** The Heroku stack to deploy and build with e.g heroku-18. **Default**: `heroku-20`. If the input `use-app-json` is `true`, the stack will be determined by what's in `app.json`, and if not present, the default on Heroku will be used.
+- **use-app-json (optional):** Set up the initial build using the `app.json` in the root directory. **Default**: `false`.
 - **team (optional):** The Heroku team the app belongs to.
+- **files-glob (optional):** The glob pattern for files/folders to include in the deployment. **Default**: `*`
 
 ## What's next?
 
