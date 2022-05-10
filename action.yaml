@@ -2,28 +2,19 @@ name: "Manage Heroku Review Apps"
 description: Use Heroku API to replicate the review app integration
 author: Peter Mbanugo (@pmbanugo - GitHub)
 inputs:
-  app-name-prefix:
-    description: "Prefix for the app. This is can be the name of the pipeline e.g vercel prefix will produce vercel-pr-PR_NUMBER.herokuapp.com"
-    required: false
-    default: ""
   api-key:
     description: "Your Heroku API key"
     required: true
+  files-glob:
+    default: "*"
+    description: "The glob pattern for files to include in the deployment"
+    required: false
   pipeline-id:
     description: "The id of the pipeline to deploy review app for"
     required: true
-  region:
-    description: "Region to deploy. eu or us"
-    default: "eu"
-    required: false
-  stack:
-    description: "Heroku stack to deploy to e.g heroku-18. Default: heroku-20"
-    default: "heroku-20"
-    required: false
-  use-app-json:
-    description: "Set up the initial build using app.json. For more info: https://devcenter.heroku.com/articles/setting-up-apps-using-the-heroku-platform-api"
-    default: "false"
-    required: false
+  base-name:
+    description: "The prefix used to generate review app name. This should be the same as what you specified for the review app URL pattern in Heroku Dashboard"
+    required: true
 outputs:
   url:
     description: "The URL for the app"
@@ -36,90 +27,51 @@ runs:
   steps:
     - name: Generate app name
       shell: bash
-      env:
-        APP_PREFIX: ${{ inputs.app-name-prefix }}
       run: |
-        #!/bin/bash
-
-        if [[ $APP_PREFIX == '' ]]; then
-        echo "using default prefix"
-        echo "APP_NAME=review-actions-pr-${{ github.event.number }}" >> $GITHUB_ENV
-        else
-        echo "using app prefix"
-        echo "APP_NAME=${{ inputs.app-name-prefix }}-pr-${{ github.event.number }}" >> $GITHUB_ENV
-        fi
+        echo "APP_NAME=${{ inputs.base-name }}-pr-${{ github.event.number }}" >> $GITHUB_ENV
     - name: Create Source Endpoint
       if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
       id: source_endpoint
       shell: bash
       run: |
-        echo ::set-output name=SOURCE_ENDPOINT::$(curl -X POST https://api.heroku.com/sources \
+        export RESPONSE=$(curl -X POST https://api.heroku.com/sources \
         -H "Content-Type: application/json" \
         -H "Accept: application/vnd.heroku+json; version=3" \
-        -H "Authorization: Bearer ${{ inputs.api-key }}" | \
-        jq -r '{get: .source_blob.get_url, put: .source_blob.put_url}')
+        -H "Authorization: Bearer ${{ inputs.api-key }}")
+        echo ::set-output name=SOURCE_ENDPOINT::$(echo $RESPONSE | jq -r '{get: .source_blob.get_url, put: .source_blob.put_url}')
     - name: Compress Source Code
       if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
       shell: bash
       run: |
-        tar -czvf source.tar.gz *
+        tar -czvf source.tar.gz ${{ inputs.files-glob }}
     - name: Upload Source Code
       if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
       shell: bash
-      env:
-        SOURCE_ENDPOINT_GET: ${{ steps.source_endpoint_env.outputs.SOURCE_ENDPOINT_GET }}
       run: |
         export URL=$(echo ${{ toJSON(steps.source_endpoint.outputs.SOURCE_ENDPOINT) }} | jq -r '.put')
         curl $URL -X PUT -H 'Content-Type:' --data-binary @source.tar.gz
     - name: Create App
-      if: ${{ github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened') && inputs.use-app-json == 'false' }}
-      shell: bash
-      run: |
-        curl -X POST https://api.heroku.com/apps \
-        -d '{
-        "name": "'"$APP_NAME"'",
-        "region": "${{ inputs.region }}",
-        "stack": "${{ inputs.stack }}"
-        }' \
-        -H "Content-Type: application/json" \
-        -H "Accept: application/vnd.heroku+json; version=3" \
-        -H "Authorization: Bearer ${{ inputs.api-key }}"
-    - name: "Create App (Setup with app.json)"
-      if: ${{ github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened') && inputs.use-app-json == 'true' }}
-      shell: bash
-      run: |
-        export SOURCE_GET_URL=$(echo ${{ toJSON(steps.source_endpoint.outputs.SOURCE_ENDPOINT) }} | jq -r '.get')
-        curl -X POST https://api.heroku.com/app-setups \
-        -d '{
-        "source_blob": {"url": "'"$SOURCE_GET_URL"'", "version": "'"${{ github.event.pull_request.head.sha }}"'"},
-        "app": {
-          "name": "'"$APP_NAME"'",
-          "region": "${{ inputs.region }}"
-        }
-        }' \
-        -H "Content-Type: application/json" \
-        -H "Accept: application/vnd.heroku+json; version=3" \
-        -H "Authorization: Bearer ${{ inputs.api-key }}"
-    - name: Update Pipeline
       if: ${{ github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened') }}
       shell: bash
       run: |
-        curl -X POST https://api.heroku.com/pipeline-couplings \
-          -d '{
-          "app": "'"$APP_NAME"'",
-          "pipeline": "'"${{ inputs.pipeline-id }}"'",
-          "stage": "review"
+        export SOURCE_GET_URL=$(echo ${{ toJSON(steps.source_endpoint.outputs.SOURCE_ENDPOINT) }} | jq -r '.get')
+        curl -X POST https://api.heroku.com/review-apps \
+        -d '{
+        "source_blob": {"url": "'"$SOURCE_GET_URL"'", "version": "'"${{ github.event.pull_request.head.sha }}"'"},
+        "branch": "${{ github.head_ref }}",
+        "pipeline": "${{ inputs.pipeline-id }}",
+        "pr_number": ${{ github.event.number }}
         }' \
         -H "Content-Type: application/json" \
         -H "Accept: application/vnd.heroku+json; version=3" \
         -H "Authorization: Bearer ${{ inputs.api-key }}"
     - name: Create Build
-      if: ${{ github.event_name == 'pull_request' && (github.event.action == 'synchronize' || ((github.event.action == 'opened' || github.event.action == 'reopened') && inputs.use-app-json == 'false')) }}
+      if: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
       shell: bash
       run: |
         export SOURCE_GET_URL=$(echo ${{ toJSON(steps.source_endpoint.outputs.SOURCE_ENDPOINT) }} | jq -r '.get')
         export OUTPUT_STREAM_URL=$(curl -X POST https://api.heroku.com/apps/$APP_NAME/builds \
-        -d '{"source_blob":{"url":"'"$SOURCE_GET_URL"'", "version": "'"${{ github.event.pull_request.head.sha }}"'"}}' \
+        -d '{"source_blob":{"url":"'"$SOURCE_GET_URL"'", "version": "${{ github.event.pull_request.head.sha }}"}}' \
         -H 'Accept: application/vnd.heroku+json; version=3' \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer ${{ inputs.api-key }}" | \

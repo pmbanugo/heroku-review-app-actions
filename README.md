@@ -2,8 +2,6 @@
 
 This GitHub action manages Heroku review apps for your software delivery pipeline. This was born out of the frustration of not being able to use review apps for a long time and there's no timeline when Heroku will have this sorted. See [status.heroku.com/incidents/2413](https://status.heroku.com/incidents/2413) for more info.
 
-This mimics 💯 how review apps work with the native Heroku integration.
-
 ### Features
 
 - ⚙️ Focuses on automated preview deploy. You get the same automated preview deploy experience for your PRs.
@@ -34,9 +32,8 @@ jobs:
         with:
           api-key: ${{ secrets.HEROKU_API_KEY }}
           pipeline-id: ${{ secrets.HEROKU_PIPELINE_ID }}
-          app-name-prefix: getting-started
-          region: us
-          use-app-json: true # Use this if your app contains app.json in the root directory
+          base-name: getting-started
+          file-glob: "* .prettierrc" # optional
       - name: Get the review app url # Use the output from the `deploy` step
         run: echo "The URL is ${{ steps.deploy.outputs.url }}"
       - name: Comment on commit # Optional: You can use any action to comment on the PR
@@ -52,18 +49,18 @@ jobs:
 
 The action expects a few input parameters which are defined below.
 
-- app-name-prefix (optional): Prefix for the app. This is should generally be the name of the pipeline e.g `airtable` prefix will produce `soludo-pr-PR_NUMBER.herokuapp.com`.
-- api-key (required): Your Heroku API key
-- pipeline-id (required): The id of the pipeline to deploy the review app to.
-- region (optional): The region to deploy to. For example `eu` or `us`. Default: `eu`
-- stack (optional): The Heroku stack to deploy and build with e.g heroku-18. Default: `heroku-20`. If the input `use-app-json` is `true`, the stack will be determined by what's in `app.json`, and if not present, the default on Heroku will be used.
-- use-app-json (optional): Set up the initial build using the `app.json` in the root directory. Default: `false`.
+- **api-key:** _(required)_ Your Heroku API key.
+- **pipeline-id:** _(required)_ The id of the pipeline for the review apps.
+- **files-glob:** _(Optional - Default `*`)_ The glob pattern for files to include in the deployment.
+- **base-name:** _(required)_ The prefix used to generate review app name. This should be the same as what you specified for the review app URL pattern in Heroku Dashboard.
 
-## What's next?
+## Difference between v1.x & v2.x
 
-I used a similar code for my private workflow since the removal of GitHub integration from Heroku. I decided to release this seeing that there's no clear indication as to when it'll be sorted. There are some edge cases that should be handled (proper error handling) but at the current release is not being done. I'll be making improvements in the coming days/weeks until Heroku restores their service (or until the community no longer needs this).
+Earlier version from v1.0 created apps and placed them into the pipeline as a review app. This worked ok because you could control the review app name. However, it came at the cost of not being able to automatically use the config variables defined in the Review Apps settings. The workaround was to use something like what you see in this [page](https://help.heroku.com/RVEKYMZQ/how-to-copy-staging-dev-production-application-config-variable-to-review-app-config-vars).
 
-This action works well with most cases at the moment. If something is broken or you would extra features or configuration, feel free to create an issue.
+In order to utilise the config vars defined for review apps, I decided to use the _/review-apps_ Heroku API endpoint for v2 of this action. There are less things to configure, therefore the inputs are different and caused a breaking change. Both versions are stable and serves different use-cases. Bug fixes will still be treated for both, but with the most focus on v2.
+
+If you use v1.x and want to see the README for v1.x, switch to the v1.x [branch](/tree/v1.x).
 
 ## Sponsor
 
