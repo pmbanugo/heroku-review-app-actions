@@ -60,7 +60,11 @@ Earlier version from v1.0 created apps and placed them into the pipeline as a re
 
 In order to utilise the config vars defined for review apps, I decided to use the _/review-apps_ Heroku API endpoint for v2 of this action. There are less things to configure, therefore the inputs are different and caused a breaking change. Both versions are stable and serves different use-cases. Bug fixes will still be treated for both, but with the most focus on v2.
 
-If you use v1.x and want to see the README for v1.x, switch to the v1.x [branch](/tree/v1.x).
+### How to choose?
+
+If you already have review apps enabled for your pipeline, use v2. If you have a pipeline with review apps disabled, use v1.2.x.
+
+If you use v1.x and want to see the README for v1.x, switch to the v1.x [branch](/tree/v1.x). The main branch has code for v2.x.
 
 ## Sponsor
 
