@@ -85,7 +85,12 @@ runs:
       if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' }}
       shell: bash
       run: |
-        curl -X DELETE https://api.heroku.com/apps/$APP_NAME \
+        export REVIEW_APP_ID=$(curl -X GET https://api.heroku.com/apps/$APP_NAME/review-app \
+        -H 'Accept: application/vnd.heroku+json; version=3' \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer ${{ inputs.api-key }}" | \
+        jq -r '.id')
+        curl -X DELETE https://api.heroku.com/review-apps/$REVIEW_APP_ID \
         -H "Content-Type: application/json" \
         -H "Accept: application/vnd.heroku+json; version=3" \
         -H "Authorization: Bearer ${{ inputs.api-key }}"
