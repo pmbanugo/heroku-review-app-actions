@@ -66,7 +66,7 @@ runs:
         -H "Accept: application/vnd.heroku+json; version=3" \
         -H "Authorization: Bearer ${{ inputs.api-key }}"
     - name: Create Build
-      if: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+      if: ${{ github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize') }}
       shell: bash
       run: |
         export SOURCE_GET_URL=$(echo ${{ toJSON(steps.source_endpoint.outputs.SOURCE_ENDPOINT) }} | jq -r '.get')
