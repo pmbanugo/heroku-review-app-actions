@@ -4,9 +4,9 @@ This GitHub action manages Heroku review apps for your software delivery pipelin
 
 ### Features
 
-- ⚙️ Focuses on automated preview deploy. You get the same automated preview deploy experience for your PRs.
-- 🏎 Fast . No need to upload all your git info/metadata or history to Heroku.(coming soon - configure which files to omit from source code upload).
-- 🧘🏽‍♀️ No fear of 3rd party having access to all your private GitHub data/repository.
+-   ⚙️ Focuses on automated preview deploy. You get the same automated preview deploy experience for your PRs.
+-   🏎 Fast . No need to upload all your git info/metadata or history to Heroku.(coming soon - configure which files to omit from source code upload).
+-   🧘🏽‍♀️ No fear of 3rd party having access to all your private GitHub data/repository.
 
 ## How To Use
 
@@ -16,43 +16,45 @@ This action delete review apps when the associating PR is closed.
 
 ```yaml
 on:
-  pull_request:
-    types: [opened, reopened, closed, synchronize]
+    pull_request:
+        types: [opened, reopened, closed, synchronize]
 
 jobs:
-  automate-review-app:
-    runs-on: ubuntu-latest
-    name: A job to create and delete review a review app
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Deploy Heroku app
-        uses: pmbanugo/heroku-review-app-actions@v2.0.0 # Uses the action
-        id: deploy
-        with:
-          api-key: ${{ secrets.HEROKU_API_KEY }}
-          pipeline-id: ${{ secrets.HEROKU_PIPELINE_ID }}
-          base-name: getting-started
-          file-glob: "* .prettierrc" # optional
-      - name: Get the review app url # Use the output from the `deploy` step
-        run: echo "The URL is ${{ steps.deploy.outputs.url }}"
-      - name: Comment on commit # Optional: You can use any action to comment on the PR
-        uses: phulsechinmay/rewritable-pr-comment@v0.2.1
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COMMENT_IDENTIFIER: "Deploy"
-          message: |
-            I deployed a review app for you to try out this pull request 👇🏽
+    automate-review-app:
+        runs-on: ubuntu-latest
+        name: A job to create and delete review a review app
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v3
+            - name: Deploy Heroku app
+              uses: pmbanugo/heroku-review-app-actions@v2.0.0 # Uses the action
+              id: deploy
+              with:
+                  api-key: ${{ secrets.HEROKU_API_KEY }}
+                  pipeline-id: ${{ secrets.HEROKU_PIPELINE_ID }}
+                  base-name: getting-started
+                  file-glob: '* .prettierrc' # optional
+                  build-on-open: false
+            - name: Get the review app url # Use the output from the `deploy` step
+              run: echo "The URL is ${{ steps.deploy.outputs.url }}"
+            - name: Comment on commit # Optional: You can use any action to comment on the PR
+              uses: phulsechinmay/rewritable-pr-comment@v0.2.1
+              with:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  COMMENT_IDENTIFIER: 'Deploy'
+                  message: |
+                      I deployed a review app for you to try out this pull request 👇🏽
 
-            Heroku App: ${{ steps.deploy.outputs.url }}
+                      Heroku App: ${{ steps.deploy.outputs.url }}
 ```
 
 The action expects a few input parameters which are defined below.
 
-- **api-key:** _(required)_ Your Heroku API key.
-- **pipeline-id:** _(required)_ The id of the pipeline for the review apps.
-- **files-glob:** _(Optional - Default `*`)_ The glob pattern for files to include in the deployment.
-- **base-name:** _(required)_ The prefix used to generate review app name. This should be the same as what you specified for the review app URL pattern in Heroku Dashboard.
+-   **api-key:** _(required)_ Your Heroku API key.
+-   **pipeline-id:** _(required)_ The id of the pipeline for the review apps.
+-   **files-glob:** _(Optional - Default `*`)_ The glob pattern for files to include in the deployment.
+-   **base-name:** _(required)_ The prefix used to generate review app name. This should be the same as what you specified for the review app URL pattern in Heroku Dashboard.
+-   **build-on-open** _(Optional - Default `false`)_ Choose to create / monitor the build in this action on `opened` action for PR.
 
 ## Difference between v1.x & v2.x
 
