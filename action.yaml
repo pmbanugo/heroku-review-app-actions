@@ -53,6 +53,7 @@ runs:
     - name: Create App
       if: ${{ github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened') }}
       shell: bash
+      id: create_app
       run: |
         export SOURCE_GET_URL=$(echo ${{ toJSON(steps.source_endpoint.outputs.SOURCE_ENDPOINT) }} | jq -r '.get')
         curl -X POST https://api.heroku.com/review-apps \
@@ -69,13 +70,10 @@ runs:
       if: ${{github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')}}
       shell: bash
       run: |
-        export SOURCE_GET_URL=$(echo ${{ toJSON(steps.source_endpoint.outputs.SOURCE_ENDPOINT) }} | jq -r '.get')
-        export OUTPUT_STREAM_URL=$(curl -X POST https://api.heroku.com/apps/$APP_NAME/builds \
-        -d '{"source_blob":{"url":"'"$SOURCE_GET_URL"'", "version": "${{ github.event.pull_request.head.sha }}"}}' \
-        -H 'Accept: application/vnd.heroku+json; version=3' \
-        -H "Content-Type: application/json" \
+        export OUTPUT_STREAM_URL=$(curl -X GET https://api.heroku.com/apps/$APP_NAME/builds \
+        -H "Accept: application/vnd.heroku+json; version=3" \
         -H "Authorization: Bearer ${{ inputs.api-key }}" | \
-        jq -r '.output_stream_url')
+        jq -r '.[0].output_stream_url)
         curl $OUTPUT_STREAM_URL
     - name: Create Build
       if: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize'}}
