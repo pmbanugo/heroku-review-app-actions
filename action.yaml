@@ -65,8 +65,30 @@ runs:
         -H "Content-Type: application/json" \
         -H "Accept: application/vnd.heroku+json; version=3" \
         -H "Authorization: Bearer ${{ inputs.api-key }}"
+        sleep 10s
+    - name: Watch Build
+      if: ${{github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')}}
+      shell: bash
+      run: |
+        while true; do
+          export APP_STATUS=$(curl -X GET https://api.heroku.com/apps/$APP_NAME/review-app \
+          -H "Accept: application/vnd.heroku+json; version=3" \
+          -H "Authorization: Bearer ${{ inputs.api-key }}" | jq -r '.status')
+          if [[ $APP_STATUS != null ]]
+          then
+            break
+          else
+            echo "$APP_NAME is $APP_STATUS"
+            sleep 5s
+          fi
+        done
+        export OUTPUT_STREAM_URL=$(curl -X GET https://api.heroku.com/apps/$APP_NAME/builds \
+        -H "Accept: application/vnd.heroku+json; version=3" \
+        -H "Authorization: Bearer ${{ inputs.api-key }}" | \
+        jq -r '.[0].output_stream_url')
+        curl $OUTPUT_STREAM_URL
     - name: Create Build
-      if: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+      if: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize'}}
       shell: bash
       run: |
         export SOURCE_GET_URL=$(echo ${{ toJSON(steps.source_endpoint.outputs.SOURCE_ENDPOINT) }} | jq -r '.get')
